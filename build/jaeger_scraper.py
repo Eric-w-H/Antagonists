@@ -1,5 +1,4 @@
 #!/bin/python3
-
 from inspect import trace
 import requests_html as rq
 import time

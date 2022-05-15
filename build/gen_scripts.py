@@ -13,7 +13,7 @@ def generate_files(runfile, processfile, nparas, nsecs):
   processfile.write('./scrape.py >> results.csv\n\n')
 
   runfile.write("echo 'Warming up'\n")
-  runfile.write(f"../../DeathStarBench/hotelReservation/wrk2/wrk -D exp -t 1 -c 4 -d {nsecs}s -L -s ../../DeathStarBench/hotelReservation/wrk2/scripts/hotel-reservation/mixed-workload_type_1.lua http://localhost:5000 -R 1\n")
+  runfile.write(f"../../DeathStarBench/socialNetwork/wrk2/wrk -D exp -t 1 -c 1 -d {nsecs}s -L -s ../../DeathStarBench/socialNetwork/wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R 1\n")
 
   for cpu_paras in range(nparas+1):
     for mem_paras in range(nparas+1):
@@ -23,8 +23,12 @@ def generate_files(runfile, processfile, nparas, nsecs):
       for _ in range(mem_paras):
         # 10 MB at max utilization
         runfile.write(f"./mem-ubmark {nsecs+1} {int(10000000 / (nparas+1))} &\n") 
-      runfile.write(f"../../DeathStarBench/hotelReservation/wrk2/wrk -D exp -t 1 -c 4 -d {nsecs}s -L -s ../../DeathStarBench/hotelReservation/wrk2/scripts/hotel-reservation/mixed-workload_type_1.lua http://localhost:5000 -R 1 > out{cpu_paras}{mem_paras}.txt\n")
-      runfile.write("sleep 2\n")
+      runfile.write(f"./capture_docker_stats.sh {nsecs//2} &\n")
+      runfile.write(f"../../DeathStarBench/socialNetwork/wrk2/wrk -D exp -t 1 -c 1 -d {nsecs}s -L -s ../../DeathStarBench/socialNetwork/wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R 1 > out{cpu_paras}{mem_paras}.txt\n")
+      runfile.write(f"./jaeger_scraper.py > trace_stats_{cpu_paras}{mem_paras}.txt\n")
+      runfile.write(f"./process_docker_stats.py > computer_stats_{cpu_paras}{mem_paras}.txt\n")
+      runfile.write(f"sleep 2")
+
       # runfile.write(docker stats collect?)
       processfile.write(f'echo -n "{cpu_paras},{mem_paras}," >> results.csv\n')
       processfile.write(f'./scrape.py ./out{cpu_paras}{mem_paras}.txt >> results.csv\n\n')
