@@ -29,7 +29,7 @@ def write(file, match):
 
 if len(sys.argv) == 2:
   with open(sys.argv[1], 'r') as f:
-    with open(sys.argv[1].split('.')[0] + '.csv', 'w') as f2:
+    with open('.' + sys.argv[1].split('.')[1] + '.csv', 'w') as f2:
       for line in f.readlines():
         process('mean',meanre.search(line))
         process('stddev',stddevre.search(line))
