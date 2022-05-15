@@ -7,11 +7,12 @@ import sys
 
 # only processes mediamicroservices compose target!
 def jaeger_request_process(trace_id):
-    response = requests.get("http://localhost:16686/api/traces/"+trace_id)
+    response = requests.get("http://localhost:16686/api/traces/"+str(trace_id))
     json_value = response.json()
+    container_length = len(json_value["data"][0]["processes"])
     process_dict = {}
     container_dict = {}
-    for i in range(12):
+    for i in range(container_length):
         process_id = "p"+str(i+1)
         container_name = json_value["data"][0]["processes"]["p"+str(i+1)]["serviceName"]
         if (container_name=="nginx-web-server"): 
@@ -20,15 +21,22 @@ def jaeger_request_process(trace_id):
             container_name = container_name[:-8]
         process_dict[process_id] = container_name
         container_dict[container_name] = process_id
+    # print(process_dict)
+    # print(container_dict)
     duration_dict = {}
-    for i in range(12):
-        duration_dict["p"+str(i+1)] = 0
+    for i in range(container_length):
+        duration_dict[process_dict["p"+str(i+1)]] = 0
+    # print(duration_dict)
+    # print(len(response.json()["data"][0]["spans"]))
     for i in range(len(response.json()["data"][0]["spans"])):
         process_id = json_value["data"][0]["spans"][i]["processID"]
+        container_name = process_dict[process_id]
         duration = json_value["data"][0]["spans"][i]["duration"]
-        duration_dict[process_id] = duration_dict[process_id]+duration
+        duration_dict[container_name] = duration_dict[container_name]+duration
+    #     print(process_id + ": " + str(duration))
     print(process_dict)
     print(duration_dict)
+    # return duration_dict
 
 
 def int_jaeger_time():

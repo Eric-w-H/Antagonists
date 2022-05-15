@@ -14,6 +14,7 @@ def generate_files(runfile, processfile, nparas, nsecs):
 
   runfile.write("echo 'Warming up'\n")
   runfile.write(f"../../DeathStarBench/socialNetwork/wrk2/wrk -D exp -t 1 -c 1 -d {nsecs}s -L -s ../../DeathStarBench/socialNetwork/wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R 1\n")
+  runfile.write("sleep 2\n")
 
   for cpu_paras in range(nparas+1):
     for mem_paras in range(nparas+1):
@@ -25,9 +26,9 @@ def generate_files(runfile, processfile, nparas, nsecs):
         runfile.write(f"./mem-ubmark {nsecs+1} {int(10000000 / (nparas+1))} &\n") 
       runfile.write(f"./capture_docker_stats.sh {nsecs//2} &\n")
       runfile.write(f"../../DeathStarBench/socialNetwork/wrk2/wrk -D exp -t 1 -c 1 -d {nsecs}s -L -s ../../DeathStarBench/socialNetwork/wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R 1 > out{cpu_paras}{mem_paras}.txt\n")
-      runfile.write(f"./jaeger_scraper.py > trace_stats_{cpu_paras}{mem_paras}.txt\n")
+      runfile.write(f"./jaeger_scraper.py {nsecs} > trace_stats_{cpu_paras}{mem_paras}.txt\n")
       runfile.write(f"./process_docker_stats.py > computer_stats_{cpu_paras}{mem_paras}.txt\n")
-      runfile.write(f"sleep 2")
+      runfile.write("sleep 2\n")
 
       # runfile.write(docker stats collect?)
       processfile.write(f'echo -n "{cpu_paras},{mem_paras}," >> results.csv\n')
